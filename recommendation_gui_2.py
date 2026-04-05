@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 
 # -------------------------------
-# DEFAULT DATA
+# DATA
 # -------------------------------
 
 users = ["Aman", "Riya", "Karan", "Neha", "Arjun"]
@@ -91,7 +91,7 @@ def compute_all(matrix):
             row += f"{pred[i][j]:.2f}".ljust(12)
         output += row + "\n"
 
-    # RECOMMENDATION (for selected user)
+    # SELECTED USER
     selected = user_dropdown.get()
     if selected in users:
         idx = users.index(selected)
@@ -99,7 +99,7 @@ def compute_all(matrix):
         output += "\n===== SELECTED USER RECOMMENDATION =====\n\n"
         if len(unrated) > 0:
             best = unrated[np.argmax(pred[idx, unrated])]
-            output += f"{selected} → {products[best]} (Rating: {pred[idx][best]:.2f})\n"
+            output += f"{selected} → {products[best]} ({pred[idx][best]:.2f})\n"
         else:
             output += "All products rated\n"
 
@@ -123,18 +123,22 @@ def compute_all(matrix):
 
 
 # -------------------------------
-# CUSTOM INPUT FUNCTION
+# APPLY CUSTOM INPUT FOR ALL USERS
 # -------------------------------
 
 def apply_custom_values():
     global A
     try:
-        new_row = []
-        for entry in custom_entries:
-            val = entry.get()
-            new_row.append(int(val) if val != "" else 0)
+        new_matrix = []
 
-        A[-1] = new_row  # replace last user (Arjun)
+        for i in range(len(users)):
+            row = []
+            for j in range(len(products)):
+                val = entry_matrix[i][j].get()
+                row.append(int(val) if val != "" else 0)
+            new_matrix.append(row)
+
+        A = np.array(new_matrix)
         compute_all(A)
 
     except:
@@ -144,6 +148,13 @@ def apply_custom_values():
 def reset_default():
     global A
     A = default_A.copy()
+
+    # refill GUI fields
+    for i in range(len(users)):
+        for j in range(len(products)):
+            entry_matrix[i][j].delete(0, tk.END)
+            entry_matrix[i][j].insert(0, str(A[i][j]))
+
     compute_all(A)
 
 
@@ -153,7 +164,7 @@ def reset_default():
 
 root = tk.Tk()
 root.title("Advanced Recommendation System")
-root.geometry("900x650")
+root.geometry("1000x700")
 
 # Dropdown
 tk.Label(root, text="Select User:", font=("Arial", 10)).pack()
@@ -161,30 +172,40 @@ user_dropdown = ttk.Combobox(root, values=users)
 user_dropdown.set(users[0])
 user_dropdown.pack(pady=5)
 
-# Buttons
 tk.Button(root, text="Generate Output", command=lambda: compute_all(A)).pack(pady=5)
 
-tk.Label(root, text="Enter Custom Ratings for Arjun (0 if not rated)").pack()
+# MATRIX INPUT GRID
+tk.Label(root, text="Edit Ratings (0 = Not Rated)", font=("Arial", 10, "bold")).pack()
 
-# Custom input fields
-custom_entries = []
 frame = tk.Frame(root)
 frame.pack()
 
-for i, product in enumerate(products):
-    tk.Label(frame, text=product).grid(row=0, column=i)
-    entry = tk.Entry(frame, width=5)
-    entry.grid(row=1, column=i)
-    custom_entries.append(entry)
+entry_matrix = []
 
-tk.Button(root, text="Apply Custom Input", command=apply_custom_values).pack(pady=5)
-tk.Button(root, text="Reset to Default", command=reset_default).pack(pady=5)
+# Header
+for j, product in enumerate(products):
+    tk.Label(frame, text=product).grid(row=0, column=j+1)
+
+# Rows
+for i, user in enumerate(users):
+    tk.Label(frame, text=user).grid(row=i+1, column=0)
+    row_entries = []
+    for j in range(len(products)):
+        entry = tk.Entry(frame, width=5)
+        entry.grid(row=i+1, column=j+1)
+        entry.insert(0, str(A[i][j]))
+        row_entries.append(entry)
+    entry_matrix.append(row_entries)
+
+# Buttons
+tk.Button(root, text="Apply Custom Matrix", command=apply_custom_values).pack(pady=5)
+tk.Button(root, text="Reset Default", command=reset_default).pack(pady=5)
 
 # Output area
 text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, font=("Courier", 10))
 text_area.pack(expand=True, fill='both')
 
-# Initial display
+# Initial output
 compute_all(A)
 
 root.mainloop()
