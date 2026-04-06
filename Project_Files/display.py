@@ -1,14 +1,14 @@
-def format_matrix(users, products, matrix):
-    output = "===== USER-PRODUCT MATRIX =====\n\n"
+def format_matrix(users, products, matrix, title="===== USER-PRODUCT MATRIX ====="):
+    output = title + "\n\n"
     header = "User".ljust(10)
     for p in products:
-        header += p.ljust(10)
+        header += p.ljust(12)
     output += header + "\n"
 
     for i in range(len(users)):
         row = users[i].ljust(10)
         for j in range(len(products)):
-            row += str(matrix[i][j]).ljust(10)
+            row += str(round(matrix[i][j], 2)).ljust(12)
         output += row + "\n"
 
     return output
@@ -23,6 +23,8 @@ def format_recommendations(users, products, matrix, pred, selected_user):
     if unrated:
         best = max(unrated, key=lambda x: pred[idx][x])
         output += f"{selected_user} → {products[best]} ({pred[idx][best]:.2f})\n"
+    else:
+        output += "All products rated\n"
 
     output += "\n===== FINAL RECOMMENDATIONS =====\n\n"
 
@@ -31,6 +33,8 @@ def format_recommendations(users, products, matrix, pred, selected_user):
         if unrated:
             best = max(unrated, key=lambda x: pred[i][x])
             output += f"{users[i]} → {products[best]} ({pred[i][best]:.2f})\n"
+        else:
+            output += f"{users[i]} → All products rated\n"
 
     return output
 
